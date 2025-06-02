@@ -1,0 +1,91 @@
+@page "/addasset"
+@using BlazorServerApp.Services
+@inject AssetService AssetService
+@using BlazorServerApp.Models
+@using Microsoft.AspNetCore.Components.Forms
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+
+<h3 class="mb-4">Add Asset for Employees</h3>
+
+<!-- Floating Notification -->
+@if (showNotification)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        Success! Asset has been added successfully.
+    </div>
+}
+
+<EditForm Model="@asset" OnValidSubmit="HandleValidSubmit" FormName="AddAssetForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group mb-3">
+        <label>Employee Name</label>
+        <InputText class="form-control" @bind-Value="asset.EmployeeName" />
+        <ValidationMessage For="@(() => asset.EmployeeName)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label>Asset Type</label>
+        <InputSelect class="form-control" TValue="string" @bind-Value="asset.AssetType">
+            <option value="">-- Select Asset Type --</option>
+            <option>Laptop</option>
+            <option>Monitor</option>
+            <option>Keyboard</option>
+            <option>Mouse</option>
+            <option>Phone</option>
+        </InputSelect>
+        <ValidationMessage For="@(() => asset.AssetType)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label>Serial Number</label>
+        <InputText class="form-control" @bind-Value="asset.SerialNumber" />
+        <ValidationMessage For="@(() => asset.SerialNumber)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label>Asset Condition</label>
+        <InputSelect class="form-control" TValue="string" @bind-Value="asset.AssetCondition">
+            <option value="">-- Select Condition --</option>
+            <option>New</option>
+            <option>Good</option>
+            <option>Used</option>
+            <option>Damaged</option>
+        </InputSelect>
+        <ValidationMessage For="@(() => asset.AssetCondition)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Asset</button>
+</EditForm>
+
+
+@code {
+    [SupplyParameterFromForm]
+    private AssetsQR asset { get; set; } = new();
+    private bool showNotification = false;
+
+    private async Task HandleValidSubmit()
+    {
+        await AssetService.AddAssetAsync(asset);
+
+        await ShowNotification();
+
+        asset = new AssetsQR();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ShowNotification()
+    {
+        showNotification = true;
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(3000);
+
+        showNotification = false;
+        await InvokeAsync(StateHasChanged);
+    }
+}
