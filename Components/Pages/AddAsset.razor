@@ -1,21 +1,12 @@
 @page "/addasset"
 @using BlazorServerApp.Services
 @inject AssetService AssetService
-@using BlazorServerApp.Models
-@using Microsoft.AspNetCore.Components.Forms
+@inject UserService UserService
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 
+<PageTitle>Add Asset</PageTitle>
 
 <h3 class="mb-4">Add Asset for Employees</h3>
-
-<!-- Floating Notification -->
-@if (showNotification)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        Success! Asset has been added successfully.
-    </div>
-}
 
 <EditForm Model="@asset" OnValidSubmit="HandleValidSubmit" FormName="AddAssetForm">
     <DataAnnotationsValidator />
@@ -23,8 +14,31 @@
 
     <div class="form-group mb-3">
         <label>Employee Name</label>
-        <InputText class="form-control" @bind-Value="asset.EmployeeName" />
+        <InputSelect class="form-control" @bind-Value="asset.EmployeeName">
+            <option value="">-- Select Employee --</option>
+            @if (users != null)
+            {
+                @foreach (var user in users)
+                {
+                    <option value="@($"{user.FirstName} {user.LastName}")">
+                        @($"{user.FirstName} {user.LastName}")
+                    </option>
+                }
+            }
+        </InputSelect>
         <ValidationMessage For="@(() => asset.EmployeeName)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label>Department</label>
+        <InputText class="form-control" @bind-Value="asset.Department" />
+        <ValidationMessage For="@(() => asset.Department)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label>Sub Unit</label>
+        <InputText class="form-control" @bind-Value="asset.SubUnit" />
+        <ValidationMessage For="@(() => asset.SubUnit)" />
     </div>
 
     <div class="form-group mb-3">
@@ -61,31 +75,22 @@
     <button type="submit" class="btn btn-primary">Add Asset</button>
 </EditForm>
 
-
 @code {
+    private List<Users>? users;
+    [Parameter]
     [SupplyParameterFromForm]
-    private AssetsQR asset { get; set; } = new();
-    private bool showNotification = false;
+    public AssetsQR asset { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserService.GetAllUsersAsync();
+    }
 
     private async Task HandleValidSubmit()
     {
         await AssetService.AddAssetAsync(asset);
-
-        await ShowNotification();
-
         asset = new AssetsQR();
 
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task ShowNotification()
-    {
-        showNotification = true;
-        await InvokeAsync(StateHasChanged);
-
-        await Task.Delay(3000);
-
-        showNotification = false;
-        await InvokeAsync(StateHasChanged);
+        Navigation.NavigateTo("/viewaddedasset");
     }
 }

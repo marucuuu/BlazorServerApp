@@ -18,5 +18,13 @@ namespace BlazorServerApp.Models
 
         [Required]
         public string AssetCondition { get; set; } = string.Empty;
+
+        [Required]
+        public string Department { get; set; } = string.Empty;
+
+        [Required]
+        public string SubUnit { get; set; } = string.Empty;
+        
+        public string? QRCodeImagePath { get; set; }
     }
 }

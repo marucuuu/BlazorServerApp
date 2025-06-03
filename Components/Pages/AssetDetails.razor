@@ -1,0 +1,63 @@
+@page "/assetdetails/{Id:int}"
+@using BlazorServerApp.Services
+@layout BlazorServerApp.Components.Layout.EmptyLayout
+@inject AssetService AssetService
+
+<PageTitle>Asset Details</PageTitle>
+
+@if (asset == null)
+{
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2"><em>Loading asset details...</em></p>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm mx-auto my-4" style="max-width: 600px;">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Asset Details</h4>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Employee Name:</dt>
+                <dd class="col-sm-8">@asset.EmployeeName</dd>
+
+                <dt class="col-sm-4">Department:</dt>
+                <dd class="col-sm-8">@asset.Department</dd>
+
+                <dt class="col-sm-4">Sub Unit:</dt>
+                <dd class="col-sm-8">@asset.SubUnit</dd>
+
+                <dt class="col-sm-4">Asset Type:</dt>
+                <dd class="col-sm-8">@asset.AssetType</dd>
+
+                <dt class="col-sm-4">Serial Number:</dt>
+                <dd class="col-sm-8">@asset.SerialNumber</dd>
+
+                <dt class="col-sm-4">Condition:</dt>
+                <dd class="col-sm-8">@asset.AssetCondition</dd>
+            </dl>
+
+            @if (!string.IsNullOrEmpty(asset.QRCodeImagePath))
+            {
+                <div class="text-center mt-4">
+                    <p><strong>QR Code</strong></p>
+                    <img src="@asset.QRCodeImagePath" alt="QR Code for Asset" class="img-fluid" style="max-width: 180px;" />
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private AssetsQR? asset;
+
+    protected override async Task OnInitializedAsync()
+    {
+        asset = await AssetService.GetAssetByIdAsync(Id);
+    }
+}
+
+

@@ -1,0 +1,124 @@
+@page "/register"
+@inject BlazorServerApp.Data.AppDbContext _context
+@inject NavigationManager Navigation
+@layout BlazorServerApp.Components.Layout.EmptyLayout
+
+<PageTitle>Register</PageTitle>
+
+<div class="container d-flex justify-content-center align-items-center min-vh-70">
+    <div class="card shadow-lg p-4" style="width: 100%; max-width: 500px;">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">Create an Account</h2>
+
+            <EditForm Model="@registerModel" OnValidSubmit="HandleValidSubmit" FormName="registerForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="employeeId" class="form-label">Employee ID</label>
+                    <InputText id="employeeId" class="form-control" @bind-Value="registerModel.EmployeeID" />
+                    <ValidationMessage For="@(() => registerModel.EmployeeID)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <InputText id="firstName" class="form-control" @bind-Value="registerModel.FirstName" />
+                    <ValidationMessage For="@(() => registerModel.FirstName)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <InputText id="lastName" class="form-control" @bind-Value="registerModel.LastName" />
+                    <ValidationMessage For="@(() => registerModel.LastName)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText id="email" class="form-control" @bind-Value="registerModel.Email" />
+                    <ValidationMessage For="@(() => registerModel.Email)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                    <InputText id="phoneNumber" class="form-control" @bind-Value="registerModel.PhoneNumber" />
+                    <ValidationMessage For="@(() => registerModel.PhoneNumber)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <InputText id="password" type="password" class="form-control" @bind-Value="registerModel.Password" />
+                    <ValidationMessage For="@(() => registerModel.Password)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="registerModel.ConfirmPassword" />
+                    <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-success">Register</button>
+                </div>
+            </EditForm>
+
+            <div class="text-center mt-3">
+                <span>Already have an account?</span>
+                <a href="/" class="ms-1">Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromForm]
+    public RegisterModel registerModel { get; set; } = new();
+
+    private readonly PasswordHasher<Users> _passwordHasher = new();
+
+    private async Task HandleValidSubmit()
+    {
+        var user = new Users
+        {
+            EmployeeID = registerModel.EmployeeID!,  // <-- Set EmployeeID here
+            FirstName = registerModel.FirstName!,
+            LastName = registerModel.LastName!,
+            Email = registerModel.Email!,
+            PhoneNumber = registerModel.PhoneNumber,
+            Role = "Employee"
+        };
+
+        // Hash the password before storing
+        user.PasswordHash = _passwordHasher.HashPassword(user, registerModel.Password!);
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        Console.WriteLine($"User created: {user.EmployeeID} - {user.FirstName} {user.LastName} ({user.Email})");
+
+        Navigation.NavigateTo("/?registered=true");
+    }
+
+    public class RegisterModel
+    {
+        [Required]
+        public string? EmployeeID { get; set; }  // <-- Added EmployeeID
+
+        [Required]
+        public string? FirstName { get; set; }
+
+        [Required]
+        public string? LastName { get; set; }
+
+        [Required, EmailAddress]
+        public string? Email { get; set; }
+
+        public string? PhoneNumber { get; set; }
+
+        [Required, MinLength(6)]
+        public string? Password { get; set; }
+
+        [Required, Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        public string? ConfirmPassword { get; set; }
+    }
+}

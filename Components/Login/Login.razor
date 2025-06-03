@@ -1,0 +1,94 @@
+@page "/"
+@inject NavigationManager Navigation
+@layout BlazorServerApp.Components.Layout.EmptyLayout
+
+<PageTitle>Login</PageTitle>
+
+@if (showRegisteredNotification)
+{
+    <div class="notification-toast">
+        Registration successful! Please log in.
+        <button class="btn-close" @onclick="DismissNotification" style="margin-left:10px; background:none; border:none; color:white;">&times;</button>
+    </div>
+}
+
+
+<div class="container d-flex justify-content-center align-items-center min-vh-75">
+    <div class="card shadow-lg p-4" style="width: 100%; max-width: 400px;">
+        <div class="card-body">
+
+            <EditForm Model="@loginModel" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText id="email" class="form-control" @bind-Value="loginModel.Email" />
+                    <ValidationMessage For="@(() => loginModel.Email)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
+                    <ValidationMessage For="@(() => loginModel.Password)" />
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+            </EditForm>
+
+            <div class="text-center mt-3">
+                <span>Don't have an account?</span>
+                <a href="/register" class="ms-1">Register</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private LoginModel loginModel = new();
+
+    private bool showRegisteredNotification = false;
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("registered", out var value))
+        {
+            if (value == "true")
+            {
+                showRegisteredNotification = true;
+                _ = AutoHideNotification();
+            }
+        }
+    }
+
+    private async Task AutoHideNotification()
+    {
+        await Task.Delay(4000); // Show for 4 seconds
+        showRegisteredNotification = false;
+        StateHasChanged();
+    }
+
+    private void DismissNotification()
+    {
+        showRegisteredNotification = false;
+    }
+
+    private void HandleValidSubmit()
+    {
+        Console.WriteLine($"Login attempt: {loginModel.Email}");
+        // Add actual login logic here
+    }
+
+    public class LoginModel
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+    }
+}

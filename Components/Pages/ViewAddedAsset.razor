@@ -1,0 +1,78 @@
+@page "/viewaddedasset"
+@using BlazorServerApp.Services
+@inject AssetService AssetService
+
+<PageTitle>View Added Assets</PageTitle>
+
+<h3 class="mb-4">Added Assets for Employees</h3>
+
+@if (showNotification)
+{
+    <div class="notification-toast">
+        ✅ Action completed!
+        <button class="btn-close" @onclick="() => showNotification = false" style="margin-left:10px; background:none; border:none; color:white;">&times;</button>
+    </div>
+}
+
+<div style="max-height: 400px; overflow-y: auto;">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Employee Name</th>
+                <th>Asset Type</th>
+                <th>Serial Number</th>
+                <th>Condition</th>
+                <th>QR Code</th>
+            </tr>
+        </thead>
+            <tbody>
+            @if (assets == null)
+            {
+                <tr>
+                    <td colspan="5" class="text-center"><em>Loading assets...</em></td>
+                </tr>
+            }
+            else if (!assets.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center">No assets found.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var asset in assets)
+                {
+                    <tr>
+                        <td>@asset.EmployeeName</td>
+                        <td>@asset.AssetType</td>
+                        <td>@asset.SerialNumber</td>
+                        <td>@asset.AssetCondition</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(asset.QRCodeImagePath))
+                            {
+                                <a href="@($"assetdetails/{asset.Id}")" target="_blank">
+                                    <img src="@asset.QRCodeImagePath" width="60" />
+                                </a>
+                            }
+                            else
+                            {
+                                <span>N/A</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<AssetsQR>? assets;
+    private bool showNotification = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        assets = await AssetService.GetAllAssetsAsync();
+    }
+}
+
