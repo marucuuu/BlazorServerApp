@@ -1,36 +1,35 @@
 @page "/"
 @inject NavigationManager Navigation
 @layout BlazorServerApp.Components.Layout.EmptyLayout
+@inject UserService UserService
 
 <PageTitle>Login</PageTitle>
 
-@if (showRegisteredNotification)
-{
-    <div class="notification-toast">
-        Registration successful! Please log in.
-        <button class="btn-close" @onclick="DismissNotification" style="margin-left:10px; background:none; border:none; color:white;">&times;</button>
-    </div>
-}
 
 
 <div class="container d-flex justify-content-center align-items-center min-vh-75">
     <div class="card shadow-lg p-4" style="width: 100%; max-width: 400px;">
         <div class="card-body">
 
-            <EditForm Model="@loginModel" OnValidSubmit="HandleValidSubmit">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">@errorMessage</div>
+            }
+
+            <EditForm Model="@loginModel"
+                      OnValidSubmit="HandleValidSubmit"
+                      FormName="loginForm">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
 
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
                     <InputText id="email" class="form-control" @bind-Value="loginModel.Email" />
-                    <ValidationMessage For="@(() => loginModel.Email)" />
                 </div>
 
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password" />
-                    <ValidationMessage For="@(() => loginModel.Password)" />
                 </div>
 
                 <div class="d-grid">
@@ -46,41 +45,25 @@
     </div>
 </div>
 
-
 @code {
-    private LoginModel loginModel = new();
+    [Parameter]
+    [SupplyParameterFromForm]
+    public LoginModel loginModel { get; set; } = new();
 
-    private bool showRegisteredNotification = false;
+    private string? errorMessage;
 
-    protected override void OnInitialized()
+    private async Task HandleValidSubmit()
     {
-        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
-        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("registered", out var value))
+        var user = await UserService.AuthenticateAsync(loginModel.Email, loginModel.Password);
+        if (user != null)
         {
-            if (value == "true")
-            {
-                showRegisteredNotification = true;
-                _ = AutoHideNotification();
-            }
+            Console.WriteLine($"User {user.Email} logged in.");
+            Navigation.NavigateTo("/home", forceLoad: true);
         }
-    }
-
-    private async Task AutoHideNotification()
-    {
-        await Task.Delay(4000); // Show for 4 seconds
-        showRegisteredNotification = false;
-        StateHasChanged();
-    }
-
-    private void DismissNotification()
-    {
-        showRegisteredNotification = false;
-    }
-
-    private void HandleValidSubmit()
-    {
-        Console.WriteLine($"Login attempt: {loginModel.Email}");
-        // Add actual login logic here
+        else
+        {
+            errorMessage = "Invalid email or password.";
+        }
     }
 
     public class LoginModel

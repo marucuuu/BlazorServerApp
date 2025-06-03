@@ -1,8 +1,13 @@
 @page "/addasset"
-@using BlazorServerApp.Services
 @inject AssetService AssetService
 @inject UserService UserService
 @inject NavigationManager Navigation
+
+@using BlazorServerApp.Models;
+
+@using BlazorServerApp.Data;
+
+@using Microsoft.EntityFrameworkCore;
 
 <PageTitle>Add Asset</PageTitle>
 
