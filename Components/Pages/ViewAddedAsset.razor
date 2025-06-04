@@ -1,6 +1,8 @@
 @page "/viewaddedasset"
-@using BlazorServerApp.Services
+@attribute [Authorize]
+@inject LogoutService LogoutService
 @inject AssetService AssetService
+
 
 <PageTitle>View Added Assets</PageTitle>
 
@@ -72,7 +74,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LogoutService.RedirectIfNotAuthenticatedAsync();
         assets = await AssetService.GetAllAssetsAsync();
     }
+    
 }
 

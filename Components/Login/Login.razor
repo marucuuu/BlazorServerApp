@@ -1,7 +1,11 @@
 @page "/"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
 @inject NavigationManager Navigation
 @layout BlazorServerApp.Components.Layout.EmptyLayout
 @inject UserService UserService
+@inject IHttpContextAccessor HttpContextAccessor
+
 
 <PageTitle>Login</PageTitle>
 
@@ -57,14 +61,33 @@
         var user = await UserService.AuthenticateAsync(loginModel.Email, loginModel.Password);
         if (user != null)
         {
-            Console.WriteLine($"User {user.Email} logged in.");
-            Navigation.NavigateTo("/home", forceLoad: true);
+            var httpContext = HttpContextAccessor.HttpContext;
+            if (httpContext != null)
+            {
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Email),
+                };
+
+                var identity = new ClaimsIdentity(claims, "Cookies");
+                var principal = new ClaimsPrincipal(identity);
+
+                await httpContext.SignInAsync("Cookies", principal);
+
+                Navigation.NavigateTo("/home", forceLoad: true);
+            }
+            else
+            {
+                // This should not happen during form submission in Blazor Server.
+                errorMessage = "Unexpected error: HttpContext is not available.";
+            }
         }
         else
         {
             errorMessage = "Invalid email or password.";
         }
     }
+
 
     public class LoginModel
     {

@@ -1,7 +1,9 @@
 @page "/assetdetails/{Id:int}"
-@using BlazorServerApp.Services
+@attribute [Authorize]
 @layout BlazorServerApp.Components.Layout.EmptyLayout
+
 @inject AssetService AssetService
+@inject LogoutService LogoutService
 
 <PageTitle>Asset Details</PageTitle>
 
@@ -56,8 +58,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await LogoutService.RedirectIfNotAuthenticatedAsync();
         asset = await AssetService.GetAssetByIdAsync(Id);
     }
 }
-
-

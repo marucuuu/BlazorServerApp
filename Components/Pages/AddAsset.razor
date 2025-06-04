@@ -1,13 +1,10 @@
 @page "/addasset"
+@attribute [Authorize]
 @inject AssetService AssetService
 @inject UserService UserService
 @inject NavigationManager Navigation
 
-@using BlazorServerApp.Models;
-
-@using BlazorServerApp.Data;
-
-@using Microsoft.EntityFrameworkCore;
+@inject LogoutService LogoutService
 
 <PageTitle>Add Asset</PageTitle>
 
@@ -88,6 +85,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LogoutService.RedirectIfNotAuthenticatedAsync();
         users = await UserService.GetAllUsersAsync();
     }
 
