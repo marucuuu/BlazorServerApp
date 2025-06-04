@@ -19,6 +19,6 @@ namespace BlazorServerApp.Models
 
         public string Role { get; set; } = "User";  // consistent with simple role-based auth
 
-        
+        public string? SessionToken { get; set; }  // new
     }
 }

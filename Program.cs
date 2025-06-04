@@ -54,12 +54,63 @@ app.UseAuthorization();
 
 app.UseAntiforgery();  // Keep if you use anti-forgery tokens
 
+
+app.Use(async (context, next) =>
+{
+    var user = context.User;
+    if (user.Identity?.IsAuthenticated == true)
+    {
+        var email = user.Identity.Name;
+        var tokenClaim = user.FindFirst("SessionToken")?.Value;
+
+        if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(tokenClaim))
+        {
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (dbUser?.SessionToken != tokenClaim)
+            {
+                // Session token mismatch => logout user
+                await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                context.Response.Redirect("/");
+                return;
+            }
+        }
+        else
+        {
+            // Missing token (possible tampering) => logout
+            await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            context.Response.Redirect("/");
+            return;
+        }
+    }
+
+    await next();
+});
+
+
 // Custom logout endpoint
 app.MapGet("/logout", async (HttpContext context) =>
 {
+    var user = context.User;
+    if (user.Identity?.IsAuthenticated == true)
+    {
+        var email = user.Identity.Name;
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var dbUser = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (dbUser != null)
+        {
+            dbUser.SessionToken = null;
+            await db.SaveChangesAsync();
+        }
+    }
+
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     context.Response.Redirect("/");
 });
+
 
 // Map Blazor component routing
 app.MapStaticAssets();

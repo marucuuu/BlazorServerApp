@@ -38,6 +38,15 @@ namespace BlazorServerApp.Services
 
             return null;
         }
+        public async Task SetSessionTokenAsync(string email, string token)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user != null)
+            {
+                user.SessionToken = token;
+                await _context.SaveChangesAsync();
+            }
+        }
 
         public static string ComputeHash(string input)
         {
